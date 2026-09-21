@@ -20,6 +20,13 @@ jobs:
       - name: checkout repository
         uses: actions/checkout@v6
 
+      - name: checkout malilib 26.3
+        uses: actions/checkout@v6
+        with:
+          repository: sakura-ryoko/malilib
+          ref: 26.3
+          path: malilib-src
+
       - name: validate gradle wrapper
         uses: gradle/actions/wrapper-validation@v5
 
@@ -34,12 +41,26 @@ jobs:
         with:
           cache-read-only: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/master' && github.ref != 'refs/heads/dev' }}
 
-      - name: make gradle wrapper executable
+      - name: make gradle wrappers executable
         if: ${{ runner.os != 'Windows' }}
-        run: chmod +x ./gradlew
+        run: |
+          chmod +x ./gradlew
+          chmod +x ./malilib-src/gradlew
 
-      - name: build
+      - name: build malilib 26.3
         run: ./gradlew build
+        working-directory: malilib-src
+
+      - name: build litematica
+        shell: bash
+        run: |
+          MALILIB_JAR=$(find "$GITHUB_WORKSPACE/malilib-src/build/libs" -maxdepth 1 -type f -name 'malilib-fabric-26.3-*.jar' ! -name '*-sources.jar' | head -n 1)
+          if [ -z "$MALILIB_JAR" ]; then
+            echo "Could not find the built MaLiLib 26.3 jar"
+            exit 1
+          fi
+          echo "Using MaLiLib jar: $MALILIB_JAR"
+          ./gradlew build -Pmalilib_jar="$MALILIB_JAR"
 
       - name: capture build artifacts
         if: ${{ runner.os == 'Linux' }}

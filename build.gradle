@@ -26,13 +26,18 @@ dependencies {
 	implementation "com.google.code.findbugs:jsr305:3.0.2"
 //	implementation "org.jspecify:jspecify:1.0.0"
 
-//	implementation "fi.dy.masa.malilib:malilib-fabric-${project.minecraft_version_out}:${project.malilib_version}"
-	implementation "com.github.sakura-ryoko:malilib:${project.malilib_version}"
+	if (project.hasProperty("malilib_jar")) {
+		implementation files(project.property("malilib_jar"))
+	}
+	else {
+		implementation "com.github.sakura-ryoko:malilib:${project.malilib_version}"
+	}
 
-	// Fabric API. This is technically optional, but you probably want it anyway.
-//	compileOnly fabricApi.module("fabric-api-base", project.fabric_api_version)
-//	compileOnly fabricApi.module("fabric-networking-api-v1", project.fabric_api_version)
-//	compileOnly fabricApi.module("fabric-resource-loader-v1", project.fabric_api_version)
+	// MaLiLib exposes these Fabric API modules transitively in normal published builds.
+	// Keep them explicit here so local MaLiLib jar builds have the same compile classpath.
+	compileOnly fabricApi.module("fabric-api-base", project.fabric_api_version)
+	compileOnly fabricApi.module("fabric-networking-api-v1", project.fabric_api_version)
+	compileOnly fabricApi.module("fabric-resource-loader-v1", project.fabric_api_version)
 	include(implementation("me.fallenbreath:conditional-mixin-fabric:${project.conditionalmixin_version}"))
 
 	compileOnly "com.terraformersmc:modmenu:${project.mod_menu_version}"
